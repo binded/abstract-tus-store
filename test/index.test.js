@@ -1,7 +1,12 @@
-import test from 'blue-tape'
-import init from '../src'
+import testStore from '../src'
+import initMemStore from '../src/mem-store'
 
-test('todo', (t) => {
-  t.ok(!!init)
-  t.end()
-})
+const setup = () => {
+  const store = initMemStore()
+  return store
+}
+const teardown = () => {
+  // nothing to do...
+}
+
+testStore({ setup, teardown })

@@ -51,5 +51,10 @@
     "commitizen": {
       "path": "cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "blue-tape": "^1.0.0",
+    "pump": "^1.0.1",
+    "string-to-stream": "^1.1.0"
   }
 }
