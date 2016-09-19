@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "blue-tape": "^1.0.0",
+    "common-streams": "^1.2.0",
     "concat-stream": "^1.5.2",
     "pump": "^1.0.1",
     "string-to-stream": "^1.1.0"
