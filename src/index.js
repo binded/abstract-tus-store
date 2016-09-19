@@ -8,7 +8,10 @@ import { RandomStream } from 'common-streams'
 const noop = () => Promise.resolve()
 
 // Default to 2
-const minPartSize = (store) => (typeof store.minPartSize === 'undefined' ? 2 : store.minPartSize)
+const minPartSize = (store) => {
+  if (typeof store.minPartSize === 'undefined') return 2
+  return store.minPartSize
+}
 
 export default ({
   setup = noop,
