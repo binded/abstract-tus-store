@@ -1,5 +1,6 @@
 import test from 'blue-tape'
 import str from 'string-to-stream'
+import concat from 'concat-stream'
 
 const noop = () => Promise.resolve()
 
@@ -46,9 +47,9 @@ export default ({
       })
   ))
 
-  test('write ba to foo', () => (
+  test('write ba to foo (with size)', () => (
     store
-      .write('foo', str('ba'))
+      .write('foo', str('ba'), { size: 2 })
   ))
 
   test('info foo', (t) => (
@@ -60,7 +61,9 @@ export default ({
       })
   ))
 
-  test('write r to foo', () => store.write('foo', str('r')))
+  test('write r to foo (with size)', () => (
+    store.write('foo', str('r'), { size: 1 })
+  ))
 
   test('info foo', (t) => (
     store
@@ -70,6 +73,16 @@ export default ({
         t.equal(uploadLength, 3)
       })
   ))
+
+  // make sure writes succeeded...
+  test('readStream foo', (t) => {
+    store
+      .createReadStream('foo')
+      .pipe(concat((buf) => {
+        t.equal(buf.toString(), 'bar')
+        t.end()
+      }))
+  })
 
   test('teardown', (t) => Promise.resolve()
     .then(() => teardown(t, store))

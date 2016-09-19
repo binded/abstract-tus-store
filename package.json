@@ -1,6 +1,6 @@
 {
   "name": "abstract-tus-store",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "./lib/index.js",
   "directories": {
@@ -54,6 +54,7 @@
   },
   "dependencies": {
     "blue-tape": "^1.0.0",
+    "concat-stream": "^1.5.2",
     "pump": "^1.0.1",
     "string-to-stream": "^1.1.0"
   }

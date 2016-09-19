@@ -1,5 +1,5 @@
 import pump from 'pump'
-import { Writable } from 'stream'
+import { Writable, Readable } from 'stream'
 
 export default () => {
   const map = new Map()
@@ -39,9 +39,19 @@ export default () => {
     })
   })
 
+  const createReadStream = (key) => (
+    new Readable({
+      read() {
+        this.push(map.get(key).data)
+        this.push(null)
+      },
+    })
+  )
+
   return {
     info,
     create,
     write,
+    createReadStream,
   }
 }
