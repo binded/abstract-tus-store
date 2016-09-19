@@ -1,7 +1,7 @@
 import test from 'blue-tape'
 import str from 'string-to-stream'
 
-const noop = Promise.resolve()
+const noop = () => Promise.resolve()
 
 export default ({
   setup = noop,
