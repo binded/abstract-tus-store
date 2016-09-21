@@ -12,17 +12,19 @@ Tus stores implement an API for creating and writing sequentially to
 
 The required interface consists of 4 functions:
 
-  - `create(key, opts)` creates a new upload resource
+  - `create(key[, opts])` creates a new upload resource
   - `info(uploadId)` returns the current size, final size and metadata of an upload resource
-  - `append(uploadId, readStream, offset[, opts])` to append to an upload resource
+  - `append(uploadId, readStream, [offset,] [opts])` to append to an upload resource
   - `createReadStream(key)` creates a readable stream for the key
       (primarily used to test implementation)
 
 Optional interface:
 
-  - `createPartial(opts)` to create a new "partial" upload resource
+  - `createPartial([opts])` to create a new "partial" upload resource
   - `concat(key, uploadIds, [opts])` concatenate "partial" upload resources to key
   - `del(uploadId)` delete an upload resource to free up resources
+  - `minChunkSize` optional property that announces the minimal amount of
+      bytes to write in an append call (except for the last one)
 
 ## Install
 
@@ -178,5 +180,5 @@ TODO...
 - `createPartial(opts)` to create a new "partial" upload resource
 - `concat(key, uploadIds, [opts])` concatenate "partial" upload resources to key
 - `del(uploadId)` delete an upload resource to free up resources
-- `minChunkSize` optional property that specifies the minimal amount of
-    bytes to write in an append call (except for the last one)
+- `minChunkSize` optional property that announces the minimal amount of
+    bytes that must be written in an append call (except for the last one)

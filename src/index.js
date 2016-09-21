@@ -2,97 +2,98 @@ import test from 'blue-tape'
 import str from 'string-to-stream'
 import concat from 'concat-stream'
 import { RandomStream } from 'common-streams'
+import * as errors from './errors'
+
+export { errors }
 
 // TODO: make sure partial uploads are not visiable through createReadStream
 //
 // TODO: add a test to make sure .write() doesn't miss out on bytes
 // if readstream is already piped somewhere
 
-const noop = () => Promise.resolve()
-
-// Default to 2
-const minPartSize = (store) => {
-  if (typeof store.minPartSize === 'undefined') return 2
-  return store.minPartSize
-}
+const noop = async () => {}
 
 export default ({
   setup = noop,
   teardown = noop,
 } = {}) => {
   let store
+  let minPartSize
 
-  test('setup', (t) => Promise.resolve()
-    .then(() => setup(t))
-    .then((s) => { store = s })
-  )
-
-  test('info - unknown key', (t) => {
-    store
-      .info('unknown-key')
-      .catch((err) => {
-        t.ok(err instanceof Error)
-        t.end()
-      })
+  test('setup', async (t) => {
+    store = await setup(t)
+    if (!store.minPartSize) {
+      // Let's use a small minPartSize to make sure the store isn't lying!
+      minPartSize = 2
+    } else {
+      minPartSize = store.minPartSize
+    }
   })
 
-  test('info (foo) - unknown key', (t) => {
-    store
-      .info('foo')
-      .catch((err) => {
-        t.ok(err instanceof Error)
-        t.end()
-      })
+  test('info - unknown upload', async (t) => {
+    try {
+      await store.info('unknown-upload')
+      t.fail('expected error to be thrown')
+    } catch (err) {
+      t.ok(err instanceof Error)
+    }
   })
 
-  test('create foo (minPartSize + 1)', () => (
-    store
-      .create('foo', { uploadLength: minPartSize(store) + 1 })
-  ))
 
-  test('info foo', (t) => (
-    store
-      .info('foo')
-      .then(({ uploadOffset, uploadLength }) => {
-        t.equal(uploadOffset, 0)
-        t.equal(uploadLength, minPartSize(store) + 1)
-      })
-  ))
+  // memorise upload IDs
+  let fooUploadId
 
+  test('create foo (minPartSize + 1)', async () => {
+    const uploadLength = minPartSize + 1
+    const { uploadId } = await store.create('foo', { uploadLength })
+    fooUploadId = uploadId
+  })
+
+  test('info after create', async (t) => {
+    // TODO: test metadata
+    const { offset, uploadLength } = await store.info(fooUploadId)
+    t.equal(offset, 0)
+    t.equal(uploadLength, minPartSize + 1)
+  })
+
+  // remember written data for later compare
   const randomChunks = []
-  test('write random data (minPartSize bytes) to foo', () => {
-    const rand = new RandomStream(minPartSize(store))
+  test('append random data (minPartSize bytes)', async () => {
+    const rand = new RandomStream(minPartSize)
     rand.pipe(concat((chunk) => { randomChunks.push(chunk) }))
-    return store.write('foo', rand)
+    await store.append(fooUploadId, rand, 0)
   })
 
-  test('info foo', (t) => (
-    store
-      .info('foo')
-      .then(({ uploadOffset, uploadLength }) => {
-        t.equal(uploadOffset, minPartSize(store))
-        t.equal(uploadLength, minPartSize(store) + 1)
-      })
-  ))
+  test('info after first append', async (t) => {
+    const { offset, uploadLength } = await store.info(fooUploadId)
+    t.equal(offset, minPartSize)
+    t.equal(uploadLength, minPartSize + 1)
+  })
 
-  test('write ! to foo', () => {
+  test('wrong offset passed to append', async (t) => {
+    try {
+      await store.append(fooUploadId, str('woot'), 1)
+      t.fail('expected an error to be thrown')
+    } catch (err) {
+      t.ok(err instanceof Error)
+    }
+  })
+
+  test('append last byte (!)', async () => {
     randomChunks.push(Buffer.from('!'))
-    return store.write('foo', str('!'))
+    await store.append(fooUploadId, str('!'))
   })
 
-  test('info foo', (t) => (
-    store
-      .info('foo')
-      .then(({ uploadOffset, uploadLength }) => {
-        t.equal(uploadOffset, minPartSize(store) + 1)
-        t.equal(uploadLength, minPartSize(store) + 1)
-      })
-  ))
+  test('info after upload complete', async (t) => {
+    const { offset, uploadLength } = await store.info(fooUploadId)
+    t.equal(offset, minPartSize + 1)
+    t.equal(uploadLength, minPartSize + 1)
+  })
 
   // make sure writes succeeded...
   test('readStream foo', (t) => {
-    store
-      .createReadStream('foo')
+    // TODO: test metadata?
+    store.createReadStream('foo')
       .on('error', t.error)
       .pipe(concat((buf) => {
         t.deepEqual(buf, Buffer.concat(randomChunks))
@@ -100,7 +101,5 @@ export default ({
       }))
   })
 
-  test('teardown', (t) => Promise.resolve()
-    .then(() => teardown(t, store))
-  )
+  test('teardown', async (t) => teardown(t, store))
 }

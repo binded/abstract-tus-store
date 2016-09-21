@@ -1,57 +1,113 @@
 import pump from 'pump'
-import { Writable, Readable } from 'stream'
+import MeterStream from 'meterstream'
+import { Writable, Readable, PassThrough } from 'stream'
+import initDebug from 'debug'
+import { KeyNotFound, UploadNotFound, OffsetMismatch, UploadLocked } from './errors'
+
+const debug = initDebug('abstract-tus-store')
 
 export default () => {
   const map = new Map()
+  const keyMap = new Map()
 
-  const create = (key, { uploadLength, uploadMetadata } = {}) => (
-    Promise.resolve().then(() => {
-      map.set(key, {
-        info: { uploadLength, uploadMetadata },
-        data: new Buffer([]),
-      })
+  let uploadIdCounter = 0
+
+  const create = async (key, { uploadLength, metadata } = {}) => {
+    const uploadId = uploadIdCounter
+    map.set(uploadId, {
+      key,
+      info: { uploadLength, metadata },
+      data: new Buffer([]),
     })
-  )
+    uploadIdCounter += 1
+    return { uploadId }
+  }
 
-  const info = key => Promise.resolve().then(() => {
-    if (!map.has(key)) throw new Error('unknown key')
-    return {
-      ...map.get(key).info,
-      uploadOffset: map.get(key).data.length,
+  const info = async uploadId => {
+    if (!map.has(uploadId)) throw new UploadNotFound(uploadId)
+    const upload = map.get(uploadId)
+    const offset = upload.data.length
+    return { offset, ...upload.info }
+  }
+
+  const createLimitStream = (uploadLength, offset) => {
+    if (typeof uploadLength === 'undefined') return new PassThrough()
+    const meterStream = new MeterStream(uploadLength - offset)
+    return meterStream
+  }
+
+  const append = async (uploadId, rs, arg3, arg4) => {
+    const { expectedOffset, opts = {} } = (() => {
+      if (typeof arg3 === 'object') {
+        return { opts: arg3 }
+      }
+      return { expectedOffset: arg3, opts: arg4 }
+    })()
+    // "block" data before doing any async stuff
+    const through = rs.pipe(new PassThrough())
+
+    debug('append opts ', opts)
+
+    if (!map.has(uploadId)) throw new UploadNotFound(uploadId)
+    const upload = map.get(uploadId)
+    const oldOffset = upload.data.length
+    if (Number.isInteger(expectedOffset)) {
+      // check if offset is right
+      if (oldOffset !== expectedOffset) {
+        throw new OffsetMismatch(oldOffset, expectedOffset)
+      }
     }
-  })
 
-  const write = (key, rs) => new Promise((resolve, reject) => {
-    // TODO: lock key?
-    const data = map.get(key).data
-    const chunks = [data]
-    const ws = new Writable({
-      write(chunk, encoding, cb) {
-        chunks.push(chunk)
-        cb()
-      },
-    })
-    pump(rs, ws, (err) => {
-      // should try to write as many bytes as possible even if error
-      map.get(key).data = Buffer.concat(chunks)
-      if (err) return reject(err)
-      resolve()
-    })
-  })
+    // TODO: lock upload?
+    if (upload.locked) throw new UploadLocked()
+    try {
+      upload.locked = true
+      const newChunks = []
+      const ws = new Writable({
+        write(chunk, encoding, cb) {
+          newChunks.push(chunk)
+          cb()
+        },
+      })
 
-  const createReadStream = (key) => (
-    new Readable({
-      read() {
-        this.push(map.get(key).data)
-        this.push(null)
-      },
-    })
-  )
+      const limitStream = createLimitStream(upload.info.uploadLength, oldOffset)
+
+      await new Promise((resolve, reject) => {
+        // TODO: make sure we "block" through so that uploadLength is
+        // not exceeded
+        pump(through, limitStream, ws, (err) => {
+          // should try to write as many bytes as possible even if error
+          upload.data = Buffer.concat([upload.data, ...newChunks])
+          if (err) return reject(err)
+          resolve(upload.data)
+        })
+      })
+
+      if (upload.data.length === upload.info.uploadLength) {
+        keyMap.set(upload.key, {
+          data: upload.data,
+          metadata: upload.info.metadata,
+        })
+      }
+    } finally {
+      upload.locked = false
+    }
+  }
+
+  const createReadStream = (key) => new Readable({
+    read() {
+      if (!keyMap.has(key)) {
+        this.emit('error', new KeyNotFound(key))
+      }
+      this.push(keyMap.get(key).data)
+      this.push(null)
+    },
+  })
 
   return {
     info,
     create,
-    write,
+    append,
     createReadStream,
   }
 }
