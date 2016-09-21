@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/blockai/abstract-tus-store.svg?branch=master)](https://travis-ci.org/blockai/abstract-tus-store)
 
+WIP!
+
 Black box test suite and interface specification for [Tus](https://tus.io)-like stores.
 Inspired by [abstract-blob-store](https://github.com/maxogden/abstract-blob-store).
 
@@ -23,6 +25,13 @@ Optional interface:
   - `del(uploadId)` delete an upload resource to free up resources
   - `minChunkSize` optional property that announces the minimal amount of
       bytes to write in an append call (except for the last one)
+
+## Some modules that use this
+
+- [s3-tus-store](https://github.com/blockai/s3-tus-store)
+- [fs-tus-store](https://github.com/blockai/fs-tus-store)
+
+Send a PR adding yours if you write a new one.
 
 ## Badge
 
