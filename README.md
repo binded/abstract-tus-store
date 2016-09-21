@@ -2,10 +2,8 @@
 
 [![Build Status](https://travis-ci.org/blockai/abstract-tus-store.svg?branch=master)](https://travis-ci.org/blockai/abstract-tus-store)
 
-WIP!
-
-Blackbox test suite for tus store implementations. Inspired by
-[abstract-blob-store](https://github.com/maxogden/abstract-blob-store).
+Black box test suite and interface specification for [Tus](https://tus.io)-like stores.
+Inspired by [abstract-blob-store](https://github.com/maxogden/abstract-blob-store).
 
 Tus stores implement an API for creating and writing sequentially to
 "upload resources".
@@ -25,6 +23,12 @@ Optional interface:
   - `del(uploadId)` delete an upload resource to free up resources
   - `minChunkSize` optional property that announces the minimal amount of
       bytes to write in an append call (except for the last one)
+
+## Badge
+
+Include this badge in your readme if you make a new module that uses the `abstract-tus-store` API:
+
+[![tus-store-compatible](badge.png)](https://github.com/blockai/abstract-tus-store)
 
 ## Install
 
