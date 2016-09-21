@@ -39,7 +39,6 @@ export default ({
     }
   })
 
-
   // memorise upload IDs
   let fooUploadId
   let otherUploadId
