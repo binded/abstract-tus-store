@@ -22,12 +22,13 @@ export default ({
 
   test('setup', async (t) => {
     store = await setup(t)
-    if (!store.minPartSize) {
+    if (!store.minChunkSize) {
       // Let's use a small minPartSize to make sure the store isn't lying!
       minPartSize = 2
     } else {
-      minPartSize = store.minPartSize
+      minPartSize = store.minChunkSize
     }
+    t.comment(`testing with minPartSize = ${minPartSize}`)
   })
 
   test('info - unknown upload', async (t) => {
