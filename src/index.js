@@ -66,10 +66,11 @@ export default ({
 
   // remember written data for later compare
   const randomChunks = []
-  test('append random data (minPartSize bytes)', async () => {
+  test('append random data (minPartSize bytes)', async (t) => {
     const rand = new RandomStream(minPartSize)
     rand.pipe(concat((chunk) => { randomChunks.push(chunk) }))
-    await store.append(fooUploadId, rand, 0)
+    const { offset } = await store.append(fooUploadId, rand, 0)
+    t.equal(offset, minPartSize)
   })
 
   test('info after first append', async (t) => {

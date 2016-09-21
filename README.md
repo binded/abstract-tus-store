@@ -143,6 +143,10 @@ Append data to an upload resource.
 * `opts.uploadLength`: **Number** Used to set the length of a
     deferred upload.
 
+Resolves to an object with the following properties:
+
+* `offset`: **Number** **required** the new offset of the upload
+
 Data must be read and written to the upload resource until the data
 stream ends or the upload completes (`offset === uploadLength`).
 

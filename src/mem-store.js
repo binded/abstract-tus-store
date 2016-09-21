@@ -89,6 +89,7 @@ export default () => {
           metadata: upload.info.metadata,
         })
       }
+      return { offset: upload.data.length }
     } finally {
       upload.locked = false
     }
