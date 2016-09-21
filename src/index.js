@@ -4,6 +4,9 @@ import concat from 'concat-stream'
 import { RandomStream } from 'common-streams'
 
 // TODO: make sure partial uploads are not visiable through createReadStream
+//
+// TODO: add a test to make sure .write() doesn't miss out on bytes
+// if readstream is already piped somewhere
 
 const noop = () => Promise.resolve()
 
