@@ -42,11 +42,20 @@ export default ({
 
   // memorise upload IDs
   let fooUploadId
+  let otherUploadId
 
   test('create foo (minPartSize + 1)', async () => {
     const uploadLength = minPartSize + 1
     const { uploadId } = await store.create('foo', { uploadLength })
     fooUploadId = uploadId
+  })
+
+  // We will use this later to overwrite key
+  test('create another upload for same key', async (t) => {
+    const uploadLength = 'bar'.length
+    const { uploadId } = await store.create('foo', { uploadLength })
+    t.notEqual(fooUploadId, uploadId)
+    otherUploadId = uploadId
   })
 
   test('info after create', async (t) => {
@@ -97,6 +106,20 @@ export default ({
       .on('error', t.error)
       .pipe(concat((buf) => {
         t.deepEqual(buf, Buffer.concat(randomChunks))
+        t.end()
+      }))
+  })
+
+  test('finish second upload', async () => {
+    await store.append(otherUploadId, str('bar'))
+  })
+
+  test('readStream foo after second upload finished', (t) => {
+    // TODO: test metadata?
+    store.createReadStream('foo')
+      .on('error', t.error)
+      .pipe(concat((buf) => {
+        t.deepEqual(buf.toString(), 'bar')
         t.end()
       }))
   })
