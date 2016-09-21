@@ -157,6 +157,11 @@ available on its linked key (except for partial uploads which do not
 have a key). If an object already exists at said key, it must be
 overwritten.
 
+Must throw an `OffsetMismatch` error if the supplied offset is
+incorrect.
+
+Must throw an `UploadNotFound` error if the upload doesn't exist.
+
 ### createReadStream(key[, onMetadata])
 
 Creates a readable stream to read the key's content from the backing
@@ -173,3 +178,5 @@ TODO...
 - `createPartial(opts)` to create a new "partial" upload resource
 - `concat(key, uploadIds, [opts])` concatenate "partial" upload resources to key
 - `del(uploadId)` delete an upload resource to free up resources
+- `minChunkSize` optional property that specifies the minimal amount of
+    bytes to write in an append call (except for the last one)
