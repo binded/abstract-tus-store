@@ -13,7 +13,7 @@ export default () => {
   let uploadIdCounter = 0
 
   const create = async (key, { uploadLength, metadata } = {}) => {
-    const uploadId = uploadIdCounter
+    const uploadId = `${uploadIdCounter}`
     map.set(uploadId, {
       info: { key, uploadLength, metadata },
       data: new Buffer([]),
@@ -24,7 +24,7 @@ export default () => {
 
   const info = async uploadId => {
     if (!map.has(uploadId)) throw new UploadNotFound(uploadId)
-    const upload = map.get(uploadId)
+    const upload = map.get(`${uploadId}`)
     const offset = upload.data.length
     return { offset, ...upload.info }
   }
@@ -98,15 +98,28 @@ export default () => {
     }
   }
 
-  const createReadStream = (key) => new Readable({
-    read() {
-      if (!keyMap.has(key)) {
-        this.emit('error', new KeyNotFound(key))
-      }
-      this.push(keyMap.get(key).data)
-      this.push(null)
-    },
-  })
+  const createReadStream = (key, onInfo) => {
+    if (onInfo) {
+      process.nextTick(() => {
+        if (keyMap.has(key)) {
+          const keyInfo = keyMap.get(key)
+          onInfo({
+            contentLength: keyInfo.data.length,
+            metadata: keyInfo.metadata || {},
+          })
+        }
+      })
+    }
+    return new Readable({
+      read() {
+        if (!keyMap.has(key)) {
+          this.emit('error', new KeyNotFound(key))
+        }
+        this.push(keyMap.get(key).data)
+        this.push(null)
+      },
+    })
+  }
 
   return {
     info,

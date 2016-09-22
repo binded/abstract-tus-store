@@ -4,6 +4,7 @@ import concat from 'concat-stream'
 import { RandomStream } from 'common-streams'
 import * as errors from './errors'
 
+export { default as memstore } from './mem-store'
 export { errors }
 
 // TODO: make sure partial uploads are not visiable through createReadStream
@@ -53,7 +54,10 @@ export default ({
   // We will use this later to overwrite key
   test('create another upload for same key', async (t) => {
     const uploadLength = 'bar'.length
-    const { uploadId } = await store.create('foo', { uploadLength })
+    const { uploadId } = await store.create('foo', {
+      uploadLength,
+      metadata: { bar: 'foo' },
+    })
     t.notEqual(fooUploadId, uploadId)
     otherUploadId = uploadId
   })
@@ -92,8 +96,10 @@ export default ({
 
   test('append last byte (!)', async (t) => {
     randomChunks.push(Buffer.from('!'))
-    const { upload } = await store.append(fooUploadId, str('!'))
+    const { upload, offset } = await store.append(fooUploadId, str('!'))
     t.equal(upload.uploadLength, minPartSize + 1)
+    t.equal(offset, minPartSize + 1)
+    t.equal(upload.offset, minPartSize + 1)
   })
 
   test('info after upload complete', async (t) => {
@@ -125,6 +131,19 @@ export default ({
         t.deepEqual(buf.toString(), 'bar')
         t.end()
       }))
+  })
+
+  test('readStream onInfo callback', (t) => {
+    // TODO: test metadata?
+    const rs = store.createReadStream('foo', ({ contentLength, metadata }) => {
+      t.equal(contentLength, 3)
+      t.deepEqual(metadata, { bar: 'foo' })
+      rs.pipe(concat((buf) => {
+        t.deepEqual(buf.toString(), 'bar')
+        t.end()
+      }))
+    })
+    .on('error', t.error)
   })
 
   test('teardown', async (t) => teardown(t, store))

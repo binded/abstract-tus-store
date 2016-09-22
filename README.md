@@ -183,14 +183,14 @@ incorrect.
 
 Must throw an `UploadNotFound` error if the upload doesn't exist.
 
-### createReadStream(key[, onMetadata])
+### createReadStream(key[, onInfo])
 
 Creates a readable stream to read the key's content from the backing
 store. This is mostly used for testing implementations.
 
 * `key`: **String** **required** key to read from the store
-* `onMetadata`: **Function** optional callback that will be called with
-    the key's metadata
+* `onInfo`: **Function** optional callback that will be called with
+    an `{ contentLength, metadata }` object
 
 ## Optional APIs
 
