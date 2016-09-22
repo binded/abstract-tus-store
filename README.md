@@ -2,10 +2,10 @@
 
 [![Build Status](https://travis-ci.org/blockai/abstract-tus-store.svg?branch=master)](https://travis-ci.org/blockai/abstract-tus-store)
 
-WIP!
-
 Black box test suite and interface specification for [Tus](https://tus.io)-like stores.
 Inspired by [abstract-blob-store](https://github.com/maxogden/abstract-blob-store).
+
+WIP!
 
 Tus stores implement an API for creating and writing sequentially to
 "upload resources".
