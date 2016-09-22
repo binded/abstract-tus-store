@@ -15,8 +15,7 @@ export default () => {
   const create = async (key, { uploadLength, metadata } = {}) => {
     const uploadId = uploadIdCounter
     map.set(uploadId, {
-      key,
-      info: { uploadLength, metadata },
+      info: { key, uploadLength, metadata },
       data: new Buffer([]),
     })
     uploadIdCounter += 1
@@ -84,7 +83,7 @@ export default () => {
       })
 
       if (upload.data.length === upload.info.uploadLength) {
-        keyMap.set(upload.key, {
+        keyMap.set(upload.info.key, {
           data: upload.data,
           metadata: upload.info.metadata,
         })

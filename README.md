@@ -13,7 +13,7 @@ Tus stores implement an API for creating and writing sequentially to
 The required interface consists of 4 functions:
 
   - `create(key[, opts])` creates a new upload resource
-  - `info(uploadId)` returns the current size, final size and metadata of an upload resource
+  - `info(uploadId)` returns the current size, final key, size and metadata of an upload resource
   - `append(uploadId, readStream, [offset,] [opts])` to append to an upload resource
   - `createReadStream(key)` creates a readable stream for the key
       (primarily used to test implementation)
@@ -132,6 +132,8 @@ Calls to create should always return a new and unique upload ID.
 Get the `offset` and `uploadLength` of an upload resource.
 
 * `uploadId`: **String** **required** a known upload ID
+* `key`: **String** **required** the final destination of the completed
+		upload
 
 Must resolve to an object with the following properties:
 

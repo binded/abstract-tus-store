@@ -60,9 +60,10 @@ export default ({
 
   test('info after create', async (t) => {
     // TODO: test metadata
-    const { offset, uploadLength } = await store.info(fooUploadId)
+    const { offset, key, uploadLength } = await store.info(fooUploadId)
     t.equal(offset, 0)
     t.equal(uploadLength, minPartSize + 1)
+    t.equal(key, 'foo')
   })
 
   // remember written data for later compare
