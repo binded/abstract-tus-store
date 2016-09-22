@@ -90,9 +90,10 @@ export default ({
     }
   })
 
-  test('append last byte (!)', async () => {
+  test('append last byte (!)', async (t) => {
     randomChunks.push(Buffer.from('!'))
-    await store.append(fooUploadId, str('!'))
+    const { upload } = await store.append(fooUploadId, str('!'))
+    t.equal(upload.uploadLength, minPartSize + 1)
   })
 
   test('info after upload complete', async (t) => {

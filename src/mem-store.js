@@ -83,12 +83,16 @@ export default () => {
       })
 
       if (upload.data.length === upload.info.uploadLength) {
+        // complete upload
         keyMap.set(upload.info.key, {
           data: upload.data,
           metadata: upload.info.metadata,
         })
       }
-      return { offset: upload.data.length }
+      return {
+        offset: upload.data.length,
+        upload: await info(uploadId),
+      }
     } finally {
       upload.locked = false
     }

@@ -5,8 +5,6 @@
 Black box test suite and interface specification for [Tus](https://tus.io)-like stores.
 Inspired by [abstract-blob-store](https://github.com/maxogden/abstract-blob-store).
 
-WIP!
-
 Tus stores implement an API for creating and writing sequentially to
 "upload resources".
 
@@ -161,6 +159,8 @@ Append data to an upload resource.
 Resolves to an object with the following properties:
 
 * `offset`: **Number** **required** the new offset of the upload
+* `upload`: **Object** (required if the append causes the upload to
+    complete) the upload object as returned by `info(uploadId)`
 
 Data must be read and written to the upload resource until the data
 stream ends or the upload completes (`offset === uploadLength`).
