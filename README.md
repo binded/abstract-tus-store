@@ -29,6 +29,8 @@ Optional interface:
 - [s3-tus-store](https://github.com/blockai/s3-tus-store)
 - [fs-tus-store](https://github.com/blockai/fs-tus-store)
 - [keyed-tus-store](https://github.com/blockai/keyed-tus-store)
+- [tusboy](https://github.com/blockai/tusboy) (express middleware for
+    Tus protocol)
 
 Send a PR adding yours if you write a new one.
 
