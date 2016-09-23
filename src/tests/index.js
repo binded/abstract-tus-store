@@ -52,7 +52,7 @@ export default ({
     const uploadLength = 'bar'.length
     const { uploadId } = await store.create('foo', {
       uploadLength,
-      metadata: { bar: 'foo' },
+      metadata: { bar: 'foo', contentType: 'text/plain' },
     })
     t.notEqual(fooUploadId, uploadId)
     otherUploadId = uploadId
@@ -133,7 +133,7 @@ export default ({
     // TODO: test metadata?
     const rs = store.createReadStream('foo', ({ contentLength, metadata }) => {
       t.equal(contentLength, 3)
-      t.deepEqual(metadata, { bar: 'foo' })
+      t.deepEqual(metadata, { bar: 'foo', contentType: 'text/plain' })
       rs.pipe(concat((buf) => {
         t.deepEqual(buf.toString(), 'bar')
         t.end()

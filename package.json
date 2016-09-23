@@ -1,6 +1,6 @@
 {
   "name": "abstract-tus-store",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "",
   "main": "./lib/index.js",
   "directories": {
@@ -20,7 +20,13 @@
     "type": "git",
     "url": "git+https://github.com/blockai/abstract-tus-store.git"
   },
-  "keywords": ["tus", "resumable", "upload", "abstract-tus-store", "store"],
+  "keywords": [
+    "tus",
+    "resumable",
+    "upload",
+    "abstract-tus-store",
+    "store"
+  ],
   "author": "Oli Lalonde <olalonde@gmail.com> (https://syskall.com/)",
   "license": "MIT",
   "bugs": {
