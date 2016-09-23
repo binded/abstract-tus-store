@@ -130,8 +130,6 @@ Calls to create should always return a new and unique upload ID.
 Get the `offset` and `uploadLength` of an upload resource.
 
 * `uploadId`: **String** **required** a known upload ID
-* `key`: **String** **required** the final destination of the completed
-		upload
 
 Must resolve to an object with the following properties:
 
