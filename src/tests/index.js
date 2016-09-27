@@ -153,6 +153,45 @@ export default ({
     t.equal(metadata.nonlatin, nonlatin)
   })
 
+  test('beforeComplete is called', async (t) => {
+    const uploadLength = 'woot'.length
+    const { uploadId } = await store.create('foo', {
+      uploadLength,
+      metadata: {
+        somekey: 'someval',
+      },
+    })
+    try {
+      await store.append(uploadId, str('woot'), {
+        beforeComplete: (beforeInfo, beforeUploadId) => {
+          t.deepEqual(beforeUploadId, uploadId)
+          t.deepEqual(beforeInfo.uploadLength, uploadLength)
+          t.deepEqual(beforeInfo.metadata, {
+            somekey: 'someval',
+          })
+          throw new Error('stop!')
+        },
+      })
+      throw new Error('should have thrown')
+    } catch (err) {
+      t.equal(err.message, 'stop!')
+      const rs = store.createReadStream('foo')
+      const data = await new Promise((resolve) => {
+        rs.pipe(concat((buf) => {
+          resolve(buf)
+        }))
+      })
+      t.equal(data.toString(), 'bar')
+      await store.append(uploadId, str(''))
+      const dataAfterComplete = await new Promise((resolve) => {
+        store.createReadStream('foo').pipe(concat((buf) => {
+          resolve(buf)
+        }))
+      })
+      t.equal(dataAfterComplete.toString(), 'woot')
+    }
+  })
+
   // TODO: test non ascii characters in metadata
   // TODO: test keys with multiple / chars...
 

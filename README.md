@@ -154,6 +154,8 @@ Append data to an upload resource.
 * `uploadId`: **String** **required** a known Upload ID
 * `data`: **Readable Stream** **required** Data that will be appended to the upload resource.
 * `offset`: **Number** Optional offset to help prevent data corruption.
+* `opts.beforeComplete`: **Function** (async) function that will be called
+    as `beforeComplete(upload, uploadId)` before completing the upload.
 * `opts.uploadLength`: **Number** Used to set the length of a
     deferred upload.
 

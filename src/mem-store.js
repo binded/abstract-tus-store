@@ -26,6 +26,10 @@ export default () => {
     if (!map.has(uploadId)) throw new UploadNotFound(uploadId)
     const upload = map.get(`${uploadId}`)
     const offset = upload.data.length
+    if (upload.info.uploadLength === offset && !keyMap.has(upload.info.key)) {
+      // for some reason upload did not complete, force a last append...
+      return { offset: offset - 1, ...upload.info }
+    }
     return { offset, ...upload.info }
   }
 
@@ -35,21 +39,43 @@ export default () => {
     return meterStream
   }
 
+  const completeUpload = async (upload, uploadId, beforeComplete) => {
+    debug('completing upload')
+    await beforeComplete(upload.info, uploadId)
+    keyMap.set(upload.info.key, {
+      data: upload.data,
+      metadata: upload.info.metadata,
+    })
+    return {
+      offset: upload.data.length,
+      upload: await info(uploadId),
+    }
+  }
+
   const append = async (uploadId, rs, arg3, arg4) => {
-    const { expectedOffset, opts = {} } = (() => {
+    const {
+      expectedOffset,
+      opts: {
+        beforeComplete = async () => {},
+      },
+    } = (() => {
       if (typeof arg3 === 'object') {
-        return { opts: arg3 }
+        return { opts: arg3 || {} }
       }
-      return { expectedOffset: arg3, opts: arg4 }
+      return { expectedOffset: arg3, opts: arg4 || {} }
     })()
     // "block" data before doing any async stuff
     const through = rs.pipe(new PassThrough())
 
-    debug('append opts ', opts)
-
     if (!map.has(uploadId)) throw new UploadNotFound(uploadId)
     const upload = map.get(uploadId)
     const oldOffset = upload.data.length
+    if (oldOffset === upload.info.uploadLength) {
+      // for some reason, upload is finished but was not completed
+      if (!Number.isInteger(expectedOffset) || expectedOffset === upload.info.uploadLength - 1) {
+        return completeUpload(upload, uploadId, beforeComplete)
+      }
+    }
     if (Number.isInteger(expectedOffset)) {
       // check if offset is right
       if (oldOffset !== expectedOffset) {
@@ -72,7 +98,7 @@ export default () => {
       const limitStream = createLimitStream(upload.info.uploadLength, oldOffset)
 
       await new Promise((resolve, reject) => {
-        // TODO: make sure we "block" through so that uploadLength is
+        // TODO: make sure we "block" through stream so that uploadLength is
         // not exceeded
         pump(through, limitStream, ws, (err) => {
           // should try to write as many bytes as possible even if error
@@ -84,10 +110,7 @@ export default () => {
 
       if (upload.data.length === upload.info.uploadLength) {
         // complete upload
-        keyMap.set(upload.info.key, {
-          data: upload.data,
-          metadata: upload.info.metadata,
-        })
+        return completeUpload(upload, uploadId, beforeComplete)
       }
       return {
         offset: upload.data.length,
