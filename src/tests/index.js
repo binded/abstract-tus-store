@@ -10,8 +10,7 @@ import { RandomStream } from 'common-streams'
 
 const noop = async () => {}
 
-export default ({
-  setup = noop,
+export default ({ setup = noop,
   teardown = noop,
 } = {}) => {
   let store
@@ -145,6 +144,17 @@ export default ({
   test('non latin chars in metadata', async (t) => {
     const uploadLength = 'bar'.length
     const nonlatin = 'słońce'
+    const { uploadId } = await store.create('foo', {
+      uploadLength,
+      metadata: { nonlatin },
+    })
+    const { metadata } = await store.info(uploadId)
+    t.equal(metadata.nonlatin, nonlatin)
+  })
+
+  test('utf-8 chars in metadata', async (t) => {
+    const uploadLength = 'bar'.length
+    const nonlatin = '大井っち.jpeg'
     const { uploadId } = await store.create('foo', {
       uploadLength,
       metadata: { nonlatin },
